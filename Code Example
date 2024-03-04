@@ -1,0 +1,64 @@
+With Sharing and Without Sharing 
+
+Tested with two classes for a user who do not have access to edit any contact records
+
+
+
+Class A
+
+public class ParentAccForContact {
+
+    public static void AccCreation(){
+        
+        Account acc = new Account();
+        
+        acc.Name = 'With and Without Sharing ';
+        acc.ParentId = [Select id from Account where id = '0015i000017LZ6DAAW'].Id;
+        
+        insert acc;
+        Account parentAcc = [Select id FROM Account where id =: acc.ParentId];
+        contactEditCheck.updateContact(parentAcc);
+    }
+}
+
+Class B 
+
+public  class contactEditCheck {
+    public static void updateContact(Account acc){
+        
+        Id accIds = acc.Id;
+        
+        List<Contact> conList = [Select id,Lastname,accountid from Contact where accountid =: accIds];
+        if(conList.size() != null){
+            System.debug('I\'m in ');
+          List<Contact> conUpdList = new List<Contact>();
+        for(Contact con: conList){
+            con.Lastname = con.LastName + con.accountId + 'with sharing & default ' ;
+            conUpdList.add(con);
+        }
+        update conUpdList;
+        }
+    }
+}
+
+Execute the above Class A in execute Anonymoue Window.
+
+ParentAccForContact.AccCreation();
+
+------------------------------------------------------------------------------------------
+
+Results Found
+
+both without any keywords --> gives error --> 'INSUFFICIENT_ACCESS_OR_READONLY, insufficient access rights on object'
+
+Class A without any keyword but Class B with 'With Sharing' Keyword--> gives error --> 'INSUFFICIENT_ACCESS_OR_READONLY, insufficient access rights on object'
+
+Class A with 'With Sharing' Keyword any keyword but Class B without any Keyword--> gives error --> 'INSUFFICIENT_ACCESS_OR_READONLY, insufficient access rights on object'
+
+without Sharing for Class A and default for Class B --> Update Success
+
+default for Class A and without Sharing for Class B --> Update Success
+
+with Sharing for Class A and without Sharing for Class B --> Update Success
+
+without Sharing for Class A and with Sharing for Class B --> Error
